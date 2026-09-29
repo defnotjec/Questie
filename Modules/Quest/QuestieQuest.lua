@@ -212,7 +212,6 @@ function QuestieQuest:HideQuestIcons()
             end
             if (icon.data.QuestData.FadeIcons or (icon.data.ObjectiveData and icon.data.ObjectiveData.FadeIcons)) and icon.data.Type ~= "complete" then
                 icon:FadeOut()
-                if _G.QuestieFSDebug then print("|cff33ccff[QFS]|r   fade icon q=" .. tostring(icon.data.Id) .. " type=" .. tostring(icon.data.Type)) end
             else
                 icon:FadeIn()
             end

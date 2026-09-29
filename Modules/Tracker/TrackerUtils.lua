@@ -451,11 +451,19 @@ local function _fsdbg(msg)
     if _G.QuestieFSDebug then print("|cff33ccff[QFS]|r " .. msg) end
 end
 
+-- Diagnostic: log every supertrack WRITE, to see deselect cascades / re-supertracks.
+if _superTrackSupported and C_SuperTrack.SetSuperTrackedQuestID then
+    hooksecurefunc(C_SuperTrack, "SetSuperTrackedQuestID", function(id)
+        _fsdbg("  >> SetSuperTrackedQuestID(" .. tostring(id) .. ")")
+    end)
+end
+
 -- forward: engage native supertracking for questId (idempotent)
 local function _SyncSuperTrack(questId)
     if not (_superTrackSupported and Questie.db.profile.focusToSuperTrack) then return end
     if questId and questId ~= 0 then
         if C_SuperTrack.GetSuperTrackedQuestID() ~= questId then
+            _fsdbg("  forward: set supertrack " .. tostring(questId))
             C_SuperTrack.SetSuperTrackedQuestID(questId)
         end
         _lastForwardSet = questId
@@ -466,6 +474,7 @@ end
 local function _ClearSuperTrackIfOurs()
     if not (_superTrackSupported and Questie.db.profile.focusToSuperTrack) then return end
     if _lastForwardSet and C_SuperTrack.GetSuperTrackedQuestID() == _lastForwardSet then
+        _fsdbg("  forward: clear supertrack (was ours " .. tostring(_lastForwardSet) .. ")")
         C_SuperTrack.SetSuperTrackedQuestID(0)
     end
     _lastForwardSet = nil
@@ -484,6 +493,7 @@ function TrackerUtils:UnFocus()
     if (not Questie.db.char.TrackerFocus) then
         return
     end
+    _fsdbg("UnFocus (was " .. tostring(Questie.db.char.TrackerFocus) .. ")")
     for questId in pairs(QuestiePlayer.currentQuestlog) do
         local quest = QuestieDB.GetQuest(questId)
 
@@ -586,7 +596,7 @@ function TrackerUtils:FocusQuest(questId)
             end
         end
     end
-    if _faded then _fsdbg(("FocusQuest %s -> bright; faded {%s}"):format(tostring(questId), table.concat(_faded, ","))) end
+    if _faded then _fsdbg(("FocusQuest %s -> bright; faded %d others"):format(tostring(questId), #_faded)) end
 end
 
 -- Redraw the map icons for a focus/unfocus change. Delegates to ToggleNotes because it runs
