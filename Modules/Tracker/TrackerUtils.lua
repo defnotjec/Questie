@@ -596,26 +596,47 @@ end
 
 local _revFireCount = 0
 
+-- Opt-in, low-spam logger for the focus/supertrack bridge. Toggle with /qfsdbg (off by default),
+-- so we don't need Questie's global DEBUG_DEVELOP firehose to diagnose this feature.
+local function _fsdbg(msg)
+    if _G.QuestieFSDebug then print("|cff33ccff[QFS]|r " .. msg) end
+end
+
+-- Return the supertracked questId ONLY if a quest is what's actually supertracked. When a map pin,
+-- user waypoint, or vignette is supertracked instead (e.g. clicking a HandyNotes pin),
+-- GetSuperTrackedQuestID can still return a STALE quest id -- which made the reverse bridge focus
+-- the wrong quest. Gate on the active supertracking type.
+local function _SuperTrackedQuestId()
+    local qid = C_SuperTrack.GetSuperTrackedQuestID()
+    if not qid or qid == 0 then return nil end
+    local getType = C_SuperTrack.GetHighestPrioritySuperTrackingType
+    if getType and Enum and Enum.SuperTrackingType and Enum.SuperTrackingType.Quest ~= nil then
+        if getType() ~= Enum.SuperTrackingType.Quest then return nil end
+    end
+    return qid
+end
+
 -- reverse: mirror the Blizzard supertracked quest into Questie's focus. Called from
 -- SUPER_TRACKING_CHANGED. Runs IMMEDIATELY per event (not debounced): Blizzard fires this several
--- times per click and a deselect can produce a transient supertrack=0 followed by a re-supertrack --
--- coalescing would read only the final state and miss the deselect, leaving the quest focused. The
--- redraw is the lightweight RefreshFocusIcons and the `focused == qid` guard makes repeat fires
--- cheap, so per-event handling is inexpensive.
+-- times per click and a deselect can produce a transient supertrack=0 then a re-supertrack --
+-- coalescing would read only the final state and miss the deselect. The `focused == qid` guard makes
+-- repeat fires cheap.
 function TrackerUtils.OnSuperTrackingChanged()
     if not (_superTrackSupported and Questie.db.profile.superTrackToFocus) then return end
-    local qid = C_SuperTrack.GetSuperTrackedQuestID()
+    local qid = _SuperTrackedQuestId()
     local focused = TrackerUtils.GetFocusedQuestId()
     _revFireCount = _revFireCount + 1
-    Questie.Debug(Questie.DEBUG_DEVELOP, "[SuperTrackFocus] fire #", _revFireCount, "supertrack=", tostring(qid),
-        "focused=", tostring(focused), "lastRev=", tostring(_lastRevFocused), "lastFwd=", tostring(_lastForwardSet))
+    if _G.QuestieFSDebug then
+        local rawId = C_SuperTrack.GetSuperTrackedQuestID()
+        local t = C_SuperTrack.GetHighestPrioritySuperTrackingType and C_SuperTrack.GetHighestPrioritySuperTrackingType()
+        _fsdbg(("fire#%d rawQuest=%s type=%s -> quest=%s focused=%s"):format(
+            _revFireCount, tostring(rawId), tostring(t), tostring(qid), tostring(focused)))
+    end
 
-    if not qid or qid == 0 then
-        -- Deselected (e.g. clicking the native POI again to clear it): drop the focus that was
-        -- coupled to supertracking -- either one the reverse bridge focused, or one a focus set via
-        -- focusToSuperTrack. Never an unrelated manual focus.
+    if not qid then
+        -- Nothing (or a non-quest) supertracked -> drop the focus WE set (never a manual focus).
         if focused and (focused == _lastRevFocused or focused == _lastForwardSet) then
-            Questie.Debug(Questie.DEBUG_DEVELOP, "[SuperTrackFocus] deselect -> unfocus", tostring(focused))
+            _fsdbg("  deselect -> unfocus " .. tostring(focused))
             TrackerUtils:UnFocus()
             TrackerUtils.RefreshFocusIcons(true)
         end
@@ -623,12 +644,18 @@ function TrackerUtils.OnSuperTrackingChanged()
         return
     end
 
-    if focused == qid then return end                        -- already focused; avoid redundant redraw/loop
-    if not QuestiePlayer.currentQuestlog[qid] then return end -- only quests in the log
-    Questie.Debug(Questie.DEBUG_DEVELOP, "[SuperTrackFocus] select -> focus", tostring(qid))
+    if focused == qid then _fsdbg("  skip: already focused"); return end
+    if not QuestiePlayer.currentQuestlog[qid] then _fsdbg("  skip: not in quest log"); return end
+    _fsdbg("  select -> focus " .. tostring(qid))
     TrackerUtils:FocusQuest(qid)
     TrackerUtils.RefreshFocusIcons(false)
     _lastRevFocused = qid
+end
+
+SLASH_QUESTIEFOCUSDEBUG1 = "/qfsdbg"
+SlashCmdList["QUESTIEFOCUSDEBUG"] = function()
+    _G.QuestieFSDebug = not _G.QuestieFSDebug
+    print("|cff33ccff[QFS]|r debug " .. (_G.QuestieFSDebug and "|cff40ff40ON|r" or "|cffff4040OFF|r"))
 end
 
 ---@return table|nil position Returns Players current X/Y coordinates or nil if a Players postion can't be determined
