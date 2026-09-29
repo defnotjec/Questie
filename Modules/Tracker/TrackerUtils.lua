@@ -588,8 +588,10 @@ function TrackerUtils.OnSuperTrackingChanged()
     local focused = TrackerUtils.GetFocusedQuestId()
 
     if not qid or qid == 0 then
-        -- deselected: drop only the focus WE applied (never a manual focus)
-        if _lastRevFocused and focused == _lastRevFocused then
+        -- Deselected (e.g. clicking the native POI again to clear it): drop the focus that was
+        -- coupled to supertracking -- either one the reverse bridge focused, or one that a focus set
+        -- via focusToSuperTrack. Never an unrelated manual focus.
+        if focused and (focused == _lastRevFocused or focused == _lastForwardSet) then
             TrackerUtils:UnFocus()
             local QuestieQuest = QuestieLoader:ImportModule("QuestieQuest")
             if QuestieQuest and QuestieQuest.ToggleNotes then QuestieQuest:ToggleNotes(true) end
