@@ -72,6 +72,9 @@ function EventHandler:RegisterEarlyEvents()
     Questie:RegisterEvent("PLAYER_ENTERING_WORLD", function(event, isInitialLogin, isReloadingUi)
         Questie.Debug(Questie.DEBUG_DEVELOP, "[EVENT] PLAYER_ENTERING_WORLD")
         if not questPOIHandled then
+            if Questie.db.profile.questPOIEnabled and not InCombatLockdown() and GetCVar("questPOI") ~= "1" then
+                SetCVar("questPOI", "1") -- opt-in: keep Blizzard's native quest POI pins across logins
+            end
             if GetCVar("questPOI") == "0" and WorldMapFrame:IsShown() then
                 -- We need to manually hide the map, because having questPOI set to 0 will open it on login, thanks to Blizzard.
                 -- Don't use WorldMapFrame:Hide() that will cause taint issues

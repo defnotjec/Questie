@@ -108,6 +108,7 @@ function QuestieOptionsDefaults:Load()
             focusToSuperTrack = false,       -- focusing a quest also engages Blizzard supertracking
             superTrackToFocus = false,       -- "focus selected quests": supertrack change -> Questie focus
             trackerFocusOnSetTomTom = false, -- the SetTomTom click bind also focuses the quest
+            questPOIEnabled = false,         -- keep Blizzard's native quest POI pins visible (+ "?" map button)
             trackerSetpoint = "TOPLEFT",
             trackerFontSizeHeader = 12,
             trackerFontHeader = "Friz Quadrata TT",

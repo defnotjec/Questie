@@ -128,8 +128,20 @@ function QuestieOptions.tabs.tracker:Initialize()
                 type = "group",
                 order = 5.5,
                 inline = true,
-                name = function() return l10n("Blizzard Focus / SuperTrack") end,
+                name = function() return l10n("Blizzard Integration") end,
                 args = {
+                    questPOIEnabled = {
+                        type = "toggle",
+                        order = 0,
+                        width = 1.5,
+                        name = function() return l10n("Enable Quest POI") end,
+                        desc = function() return l10n("Keep Blizzard's native, clickable quest POI pins visible on the world map (this client hides them each login). The always-on \"?\" button on the world map toggles them too.") end,
+                        get = function() return Questie.db.profile.questPOIEnabled end,
+                        set = function(_, value)
+                            Questie.db.profile.questPOIEnabled = value
+                            QuestieLoader:ImportModule("WorldMapButton").ApplyQuestPOI()
+                        end,
+                    },
                     focusToSuperTrack = {
                         type = "toggle",
                         order = 1,
