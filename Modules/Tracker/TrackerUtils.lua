@@ -624,6 +624,7 @@ function TrackerUtils.RefreshFocusIcons(showAll)
 end
 
 local _revFireCount = 0
+local _deselectGuard = false -- true for one frame after a deselect, to ignore Blizzard's auto-resupertrack
 
 -- Return the supertracked questId ONLY if a quest is what's actually supertracked. When a map pin,
 -- user waypoint, or vignette is supertracked instead (e.g. clicking a HandyNotes pin),
@@ -657,16 +658,22 @@ function TrackerUtils.OnSuperTrackingChanged()
     end
 
     if not qid then
-        -- Nothing (or a non-quest) supertracked -> drop the focus WE set (never a manual focus).
-        if focused and (focused == _lastRevFocused or focused == _lastForwardSet) then
+        -- Nothing (or a non-quest) supertracked -> drop ONLY a focus the reverse bridge itself set
+        -- (archive invariant: never unfocus a manual focus).
+        if focused and focused == _lastRevFocused then
             _fsdbg("  deselect -> unfocus " .. tostring(focused))
             TrackerUtils:UnFocus()
             TrackerUtils.RefreshFocusIcons(true)
         end
         _lastRevFocused = nil
+        -- Blizzard may auto-supertrack the next quest in the same event burst right after a deselect.
+        -- Ignore that auto-pick so deselecting a quest doesn't turn into focusing a different one.
+        _deselectGuard = true
+        C_Timer.After(0, function() _deselectGuard = false end)
         return
     end
 
+    if _deselectGuard then _fsdbg("  skip: auto-supertrack right after deselect"); return end
     if focused == qid then _fsdbg("  skip: already focused"); return end
     if not QuestiePlayer.currentQuestlog[qid] then _fsdbg("  skip: not in quest log"); return end
     _fsdbg("  select -> focus " .. tostring(qid))
