@@ -109,6 +109,13 @@ function QuestieOptionsDefaults:Load()
             trackerbindSetTomTom = "ctrlleft",
             trackerbindOpenQuestLog = "left",
             trackerbindUntrack = "shiftleft",
+            -- Focus <-> Blizzard super-tracking (needs C_SuperTrack; all opt-in). Forward: focusing
+            -- a quest also super-tracks it (native arrow + WaypointUI flare). Reverse: a super-track
+            -- change (e.g. clicking a Blizzard POI pin) focuses that quest in Questie.
+            -- trackerFocusOnSetTomTom: the existing SetTomTom click bind also focuses the quest.
+            focusToSuperTrack = false,
+            superTrackToFocus = false,
+            trackerFocusOnSetTomTom = false,
             trackerSetpoint = "TOPLEFT",
             trackerFontSizeHeader = 12,
             trackerFontHeader = "Friz Quadrata TT",
