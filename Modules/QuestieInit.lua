@@ -83,6 +83,8 @@ local Tutorial = QuestieLoader:ImportModule("Tutorial")
 local Phasing = QuestieLoader:ImportModule("Phasing")
 ---@type WorldMapButton
 local WorldMapButton = QuestieLoader:ImportModule("WorldMapButton")
+---@type FocusSuperTrack
+local FocusSuperTrack = QuestieLoader:ImportModule("FocusSuperTrack")
 ---@type AvailableQuests
 local AvailableQuests = QuestieLoader:ImportModule("AvailableQuests")
 ---@type DailyQuests
@@ -284,6 +286,7 @@ QuestieInit.Stages[3] = function() -- run as a coroutine
     end
 
     WorldMapButton.Initialize()
+    FocusSuperTrack.Initialize()
     Townsfolk.PostBoot()
     coYield()
 
