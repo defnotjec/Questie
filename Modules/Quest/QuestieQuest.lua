@@ -167,14 +167,11 @@ function QuestieQuest:ShowQuestIcons()
                 if (not Questie.db.char.TrackerHiddenObjectives) or (not Questie.db.char.TrackerHiddenObjectives[objectiveString]) then
                     if icon ~= nil and icon.hidden and (not icon:ShouldBeHidden()) then
                         icon:FakeShow()
-                        if _G.QuestieFSDebug then print(("|cff33ccff[QFS]|r SHOWpass FakeShow frame=%s q=%s t=%s"):format(tostring(frameName), tostring(icon.data.Id), tostring(icon.data.Type))) end
                     end
                     if (icon.data.QuestData.FadeIcons or (icon.data.ObjectiveData and icon.data.ObjectiveData.FadeIcons)) and icon.data.Type ~= "complete" then
                         icon:FadeOut()
-                        if _G.QuestieFSDebug then print(("|cff33ccff[QFS]|r SHOWpass fadeOut frame=%s q=%s t=%s"):format(tostring(frameName), tostring(icon.data.Id), tostring(icon.data.Type))) end
                     else
                         icon:FadeIn()
-                        if _G.QuestieFSDebug then print(("|cff33ccff[QFS]|r SHOWpass fadeIn frame=%s q=%s t=%s"):format(tostring(frameName), tostring(icon.data.Id), tostring(icon.data.Type))) end
                     end
                 end
             end
@@ -195,7 +192,6 @@ function _QuestieQuest:ShowManualIcons()
                 local icon = _G[frameName];
                 if icon ~= nil and icon.hidden then
                     icon:FakeShow()
-                    if _G.QuestieFSDebug then print(("|cff33ccff[QFS]|r MANUAL FakeShow frame=%s q=%s t=%s"):format(tostring(frameName), tostring(icon.data and icon.data.Id), tostring(icon.data and icon.data.Type))) end
                 end
             end
         end
@@ -213,14 +209,11 @@ function QuestieQuest:HideQuestIcons()
             if icon ~= nil and (not icon.hidden) and icon:ShouldBeHidden() then -- check for function to make sure its a frame
                 -- Hides Objective Icons
                 icon:FakeHide()
-                if _G.QuestieFSDebug then print(("|cff33ccff[QFS]|r HIDEpass FakeHide frame=%s q=%s t=%s"):format(tostring(frameName), tostring(icon.data.Id), tostring(icon.data.Type))) end
             end
             if (icon.data.QuestData.FadeIcons or (icon.data.ObjectiveData and icon.data.ObjectiveData.FadeIcons)) and icon.data.Type ~= "complete" then
                 icon:FadeOut()
-                if _G.QuestieFSDebug then print(("|cff33ccff[QFS]|r HIDEpass fadeOut frame=%s q=%s t=%s"):format(tostring(frameName), tostring(icon.data.Id), tostring(icon.data.Type))) end
             else
                 icon:FadeIn()
-                if _G.QuestieFSDebug then print(("|cff33ccff[QFS]|r HIDEpass fadeIn frame=%s q=%s t=%s"):format(tostring(frameName), tostring(icon.data.Id), tostring(icon.data.Type))) end
             end
         end
 
@@ -239,7 +232,6 @@ function _QuestieQuest:HideManualIcons()
                 local icon = _G[frameName];
                 if icon ~= nil and (not icon.hidden) then
                     icon:FakeHide()
-                    if _G.QuestieFSDebug then print(("|cff33ccff[QFS]|r MANUAL FakeHide frame=%s q=%s t=%s"):format(tostring(frameName), tostring(icon.data and icon.data.Id), tostring(icon.data and icon.data.Type))) end
                 end
             end
         end
