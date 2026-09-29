@@ -581,20 +581,17 @@ function TrackerUtils:FocusQuest(questId)
     end
 end
 
--- Lightweight focus redraw: re-apply icon fade WITHOUT GetAllQuestIds (a full quest repopulate) or a
--- QuestieTracker:Update. A focus/unfocus change only needs the already-drawn map icons re-faded, so
--- this avoids the heavy tracker re-render that QuestieQuest:ToggleNotes triggers.
+-- Redraw the map icons for a focus/unfocus change. Delegates to ToggleNotes because it runs
+-- GetAllQuestIds first, which the icons need to correctly (re)appear/disappear on a focus change --
+-- the Show/HideQuestIcons-only path dropped that and left select/deselect not showing/hiding the
+-- right icons.
+-- TODO(perf): reinstate a lightweight focus redraw that skips the full QuestieTracker:Update
+-- re-render WITHOUT breaking which icons show/hide (see the tracker-focus re-render task).
 function TrackerUtils.RefreshFocusIcons(showAll)
     local QuestieQuest = QuestieLoader:ImportModule("QuestieQuest")
-    local ThreadLib = QuestieLoader:ImportModule("ThreadLib")
-    if not (QuestieQuest and ThreadLib and ThreadLib.ThreadInstant) then return end
-    ThreadLib.ThreadInstant(function()
-        if showAll then
-            QuestieQuest:ShowQuestIcons()
-        else
-            QuestieQuest:HideQuestIcons()
-        end
-    end)
+    if QuestieQuest and QuestieQuest.ToggleNotes then
+        QuestieQuest:ToggleNotes(showAll)
+    end
 end
 
 local _revFireCount = 0
