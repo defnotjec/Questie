@@ -581,6 +581,22 @@ function TrackerUtils:FocusQuest(questId)
     end
 end
 
+-- Lightweight focus redraw: re-apply icon fade WITHOUT GetAllQuestIds (a full quest repopulate) or a
+-- QuestieTracker:Update. A focus/unfocus change only needs the already-drawn map icons re-faded, so
+-- this avoids the heavy tracker re-render that QuestieQuest:ToggleNotes triggers.
+function TrackerUtils.RefreshFocusIcons(showAll)
+    local QuestieQuest = QuestieLoader:ImportModule("QuestieQuest")
+    local ThreadLib = QuestieLoader:ImportModule("ThreadLib")
+    if not (QuestieQuest and ThreadLib and ThreadLib.ThreadInstant) then return end
+    ThreadLib.ThreadInstant(function()
+        if showAll then
+            QuestieQuest:ShowQuestIcons()
+        else
+            QuestieQuest:HideQuestIcons()
+        end
+    end)
+end
+
 local _revPending = false
 local _revFireCount = 0
 
@@ -596,8 +612,7 @@ local function _ApplyReverseFocus()
         -- focusToSuperTrack. Never an unrelated manual focus.
         if focused and (focused == _lastRevFocused or focused == _lastForwardSet) then
             TrackerUtils:UnFocus()
-            local QuestieQuest = QuestieLoader:ImportModule("QuestieQuest")
-            if QuestieQuest and QuestieQuest.ToggleNotes then QuestieQuest:ToggleNotes(true) end
+            TrackerUtils.RefreshFocusIcons(true)
         end
         _lastRevFocused = nil
         return
@@ -606,8 +621,7 @@ local function _ApplyReverseFocus()
     if focused == qid then return end                        -- already focused; avoid redundant redraw/loop
     if not QuestiePlayer.currentQuestlog[qid] then return end -- only quests in the log
     TrackerUtils:FocusQuest(qid)
-    local QuestieQuest = QuestieLoader:ImportModule("QuestieQuest")
-    if QuestieQuest and QuestieQuest.ToggleNotes then QuestieQuest:ToggleNotes(false) end
+    TrackerUtils.RefreshFocusIcons(false)
     _lastRevFocused = qid
 end
 
