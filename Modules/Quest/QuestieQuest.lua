@@ -152,6 +152,14 @@ function QuestieQuest.ToggleQuestNotes(showIcons)
     end)
 end
 
+-- Disk-only debug logger (no chat print): appends to the QuestieFSLog SavedVariable when /qfsdbg
+-- is on, so the verbose per-icon redraw trace can be read from disk without spamming chat.
+local function _fslog(msg)
+    if _G.QuestieFSDebug and type(_G.QuestieFSLog) == "table" then
+        _G.QuestieFSLog[#_G.QuestieFSLog + 1] = msg
+    end
+end
+
 --- Shows all quest icons. Needs to be called from a coroutine.
 function QuestieQuest:ShowQuestIcons()
     assert(coroutine.running(), "ShowQuestIcons must be called from a coroutine")
@@ -167,11 +175,14 @@ function QuestieQuest:ShowQuestIcons()
                 if (not Questie.db.char.TrackerHiddenObjectives) or (not Questie.db.char.TrackerHiddenObjectives[objectiveString]) then
                     if icon ~= nil and icon.hidden and (not icon:ShouldBeHidden()) then
                         icon:FakeShow()
+                        _fslog(("SHOW FakeShow %s q=%s t=%s"):format(tostring(frameName), tostring(icon.data.Id), tostring(icon.data.Type)))
                     end
                     if (icon.data.QuestData.FadeIcons or (icon.data.ObjectiveData and icon.data.ObjectiveData.FadeIcons)) and icon.data.Type ~= "complete" then
                         icon:FadeOut()
+                        _fslog(("SHOW fadeOut %s q=%s t=%s"):format(tostring(frameName), tostring(icon.data.Id), tostring(icon.data.Type)))
                     else
                         icon:FadeIn()
+                        _fslog(("SHOW fadeIn %s q=%s t=%s"):format(tostring(frameName), tostring(icon.data.Id), tostring(icon.data.Type)))
                     end
                 end
             end
@@ -209,11 +220,14 @@ function QuestieQuest:HideQuestIcons()
             if icon ~= nil and (not icon.hidden) and icon:ShouldBeHidden() then -- check for function to make sure its a frame
                 -- Hides Objective Icons
                 icon:FakeHide()
+                _fslog(("HIDE FakeHide %s q=%s t=%s"):format(tostring(frameName), tostring(icon.data.Id), tostring(icon.data.Type)))
             end
             if (icon.data.QuestData.FadeIcons or (icon.data.ObjectiveData and icon.data.ObjectiveData.FadeIcons)) and icon.data.Type ~= "complete" then
                 icon:FadeOut()
+                _fslog(("HIDE fadeOut %s q=%s t=%s"):format(tostring(frameName), tostring(icon.data.Id), tostring(icon.data.Type)))
             else
                 icon:FadeIn()
+                _fslog(("HIDE fadeIn %s q=%s t=%s"):format(tostring(frameName), tostring(icon.data.Id), tostring(icon.data.Type)))
             end
         end
 
