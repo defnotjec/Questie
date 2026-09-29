@@ -208,6 +208,12 @@ _OnClickQuest = function(self, button)
         if spawn then
             TrackerUtils:SetTomTomTarget(name, zone, spawn[1], spawn[2])
         end
+        -- The SetTomTom bind (default ctrl-left) also focuses the quest, which engages supertracking
+        -- (native arrow + WaypointUI) even when TomTom isn't installed. Opt-in: trackerFocusOnSetTomTom.
+        if Questie.db.profile.trackerFocusOnSetTomTom then
+            TrackerUtils:FocusQuest(self.Quest.Id)
+            QuestieLoader:ImportModule("QuestieQuest"):ToggleNotes(false)
+        end
     elseif TrackerUtils:IsBindTrue(Questie.db.profile.trackerbindUntrack, button) then
         if (IsModifiedClick("CHATLINK") and ChatEdit_GetActiveWindow()) then
             ChatEdit_InsertLink(QuestieLink.GetQuestLinkStringById(self.Quest.Id))

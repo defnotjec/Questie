@@ -105,6 +105,9 @@ function QuestieOptionsDefaults:Load()
             trackerbindSetTomTom = "ctrlleft",
             trackerbindOpenQuestLog = "left",
             trackerbindUntrack = "shiftleft",
+            focusToSuperTrack = false,       -- focusing a quest also engages Blizzard supertracking
+            superTrackToFocus = false,       -- "focus selected quests": supertrack change -> Questie focus
+            trackerFocusOnSetTomTom = false, -- the SetTomTom click bind also focuses the quest
             trackerSetpoint = "TOPLEFT",
             trackerFontSizeHeader = 12,
             trackerFontHeader = "Friz Quadrata TT",

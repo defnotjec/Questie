@@ -99,6 +99,10 @@ function EventHandler:RegisterLateEvents()
     Questie:RegisterEvent("MODIFIER_STATE_CHANGED", function(...)
         _EventHandler.ModifierStateChanged(...)
     end)
+    -- Mirror Blizzard supertracking into Questie focus (opt-in: superTrackToFocus).
+    if C_SuperTrack and C_SuperTrack.GetSuperTrackedQuestID then
+        Questie:RegisterEvent("SUPER_TRACKING_CHANGED", TrackerUtils.OnSuperTrackingChanged)
+    end
     Questie:RegisterEvent("PLAYER_ALIVE", function(...)
         QuestieTracker:UpdateDurabilityFrame()
         QuestieTracker:UpdateVoiceOverFrame()

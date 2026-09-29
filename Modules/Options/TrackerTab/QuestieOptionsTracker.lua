@@ -124,6 +124,41 @@ function QuestieOptions.tabs.tracker:Initialize()
                 end
             },
             Spacer_S = QuestieOptionsUtils:Spacer(5),
+            group_superTrackFocus = {
+                type = "group",
+                order = 5.5,
+                inline = true,
+                name = function() return l10n("Blizzard Focus / SuperTrack") end,
+                args = {
+                    focusToSuperTrack = {
+                        type = "toggle",
+                        order = 1,
+                        width = 1.5,
+                        name = function() return l10n("Focus engages supertracking") end,
+                        desc = function() return l10n("When you Focus a quest in the tracker, also set it as Blizzard's supertracked quest (native waypoint arrow + WaypointUI flare), in addition to Questie dimming the other map icons.") end,
+                        get = function() return Questie.db.profile.focusToSuperTrack end,
+                        set = function(_, value) Questie.db.profile.focusToSuperTrack = value end,
+                    },
+                    superTrackToFocus = {
+                        type = "toggle",
+                        order = 2,
+                        width = 1.5,
+                        name = function() return l10n("Focus selected quests") end,
+                        desc = function() return l10n("When the Blizzard supertracked quest changes (for example by clicking a native quest POI pin), automatically Focus that quest in Questie. Deselecting clears the focus this created.") end,
+                        get = function() return Questie.db.profile.superTrackToFocus end,
+                        set = function(_, value) Questie.db.profile.superTrackToFocus = value end,
+                    },
+                    trackerFocusOnSetTomTom = {
+                        type = "toggle",
+                        order = 3,
+                        width = 1.5,
+                        name = function() return l10n("Ctrl-click focus (shares TomTom bind)") end,
+                        desc = function() return l10n("Using the Set TomTom Target click (default Ctrl-Left Click) on a tracked quest also Focuses it (and supertracks it), so it works even without TomTom installed.") end,
+                        get = function() return Questie.db.profile.trackerFocusOnSetTomTom end,
+                        set = function(_, value) Questie.db.profile.trackerFocusOnSetTomTom = value end,
+                    },
+                },
+            },
             group_quests = {
                 type = "group",
                 order = 6,

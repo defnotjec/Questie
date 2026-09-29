@@ -437,6 +437,43 @@ function TrackerUtils:GetCategoryNameByID(catId)
     return "Unknown Category"
 end
 
+-- ===== Blizzard supertracking <-> Questie focus bridge (forever/questpoi-supertrack-focus) =====
+-- Opt-in integration between Questie's Focus feature and Blizzard's C_SuperTrack:
+--   * focusToSuperTrack: focusing a quest/objective also supertracks it (native arrow + WaypointUI).
+--   * superTrackToFocus: when the supertracked quest changes, focus it ("focus selected quests").
+-- Value-based guards keep the two directions from ping-ponging.
+local _superTrackSupported = (C_SuperTrack and C_SuperTrack.SetSuperTrackedQuestID and C_SuperTrack.GetSuperTrackedQuestID) and true or false
+local _lastForwardSet -- questId we last supertracked via focus, so unfocus only clears our own supertrack
+local _lastRevFocused -- questId the reverse bridge last focused, so deselect only unfocuses what we set
+
+-- forward: engage native supertracking for questId (idempotent)
+local function _SyncSuperTrack(questId)
+    if not (_superTrackSupported and Questie.db.profile.focusToSuperTrack) then return end
+    if questId and questId ~= 0 then
+        if C_SuperTrack.GetSuperTrackedQuestID() ~= questId then
+            C_SuperTrack.SetSuperTrackedQuestID(questId)
+        end
+        _lastForwardSet = questId
+    end
+end
+
+-- forward: clear supertracking on unfocus, but only if it's the one we set
+local function _ClearSuperTrackIfOurs()
+    if not (_superTrackSupported and Questie.db.profile.focusToSuperTrack) then return end
+    if _lastForwardSet and C_SuperTrack.GetSuperTrackedQuestID() == _lastForwardSet then
+        C_SuperTrack.SetSuperTrackedQuestID(0)
+    end
+    _lastForwardSet = nil
+end
+
+---@return number|nil questId The currently focused questId (quest or objective focus), or nil
+function TrackerUtils.GetFocusedQuestId()
+    local tf = Questie.db.char.TrackerFocus
+    if type(tf) == "number" then return tf end
+    if type(tf) == "string" then return tonumber(tf:match("^(%d+)")) end
+    return nil
+end
+
 function TrackerUtils:UnFocus()
     -- reset HideIcons to match savedvariable state
     if (not Questie.db.char.TrackerFocus) then
@@ -479,6 +516,7 @@ function TrackerUtils:UnFocus()
         end
     end
 
+    _ClearSuperTrackIfOurs()
     Questie.db.char.TrackerFocus = nil
 end
 
@@ -490,6 +528,7 @@ function TrackerUtils:FocusObjective(questId, objectiveIndex)
     end
 
     Questie.db.char.TrackerFocus = tostring(questId) .. " " .. tostring(objectiveIndex)
+    _SyncSuperTrack(questId)
     for questLogQuestId in pairs(QuestiePlayer.currentQuestlog) do
         local quest = QuestieDB.GetQuest(questLogQuestId)
         if quest and next(quest.Objectives) then
@@ -528,6 +567,7 @@ function TrackerUtils:FocusQuest(questId)
     end
 
     Questie.db.char.TrackerFocus = questId
+    _SyncSuperTrack(questId)
     for questLogQuestId in pairs(QuestiePlayer.currentQuestlog) do
         local quest = QuestieDB.GetQuest(questLogQuestId)
         if quest then
@@ -539,6 +579,31 @@ function TrackerUtils:FocusQuest(questId)
             end
         end
     end
+end
+
+-- reverse: mirror the Blizzard supertracked quest into Questie's focus. Call from SUPER_TRACKING_CHANGED.
+function TrackerUtils.OnSuperTrackingChanged()
+    if not (_superTrackSupported and Questie.db.profile.superTrackToFocus) then return end
+    local qid = C_SuperTrack.GetSuperTrackedQuestID()
+    local focused = TrackerUtils.GetFocusedQuestId()
+
+    if not qid or qid == 0 then
+        -- deselected: drop only the focus WE applied (never a manual focus)
+        if _lastRevFocused and focused == _lastRevFocused then
+            TrackerUtils:UnFocus()
+            local QuestieQuest = QuestieLoader:ImportModule("QuestieQuest")
+            if QuestieQuest and QuestieQuest.ToggleNotes then QuestieQuest:ToggleNotes(true) end
+        end
+        _lastRevFocused = nil
+        return
+    end
+
+    if focused == qid then return end                        -- already focused; avoid redundant redraw/loop
+    if not QuestiePlayer.currentQuestlog[qid] then return end -- only quests in the log
+    TrackerUtils:FocusQuest(qid)
+    local QuestieQuest = QuestieLoader:ImportModule("QuestieQuest")
+    if QuestieQuest and QuestieQuest.ToggleNotes then QuestieQuest:ToggleNotes(false) end
+    _lastRevFocused = qid
 end
 
 ---@return table|nil position Returns Players current X/Y coordinates or nil if a Players postion can't be determined
