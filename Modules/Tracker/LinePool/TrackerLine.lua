@@ -208,6 +208,15 @@ _OnClickQuest = function(self, button)
         if spawn then
             TrackerUtils:SetTomTomTarget(name, zone, spawn[1], spawn[2])
         end
+        -- Ctrl-click focus (shares the SetTomTom bind): toggle Questie focus on this quest. Works
+        -- even without TomTom installed. FocusSuperTrack's hooks handle the redraw + super-track.
+        if Questie.db.profile.trackerFocusOnSetTomTom then
+            if Questie.db.char.TrackerFocus == self.Quest.Id then
+                TrackerUtils:UnFocus()
+            else
+                TrackerUtils:FocusQuest(self.Quest.Id)
+            end
+        end
     elseif TrackerUtils:IsBindTrue(Questie.db.profile.trackerbindUntrack, button) then
         if (IsModifiedClick("CHATLINK") and ChatEdit_GetActiveWindow()) then
             ChatEdit_InsertLink(QuestieLink.GetQuestLinkStringById(self.Quest.Id))
