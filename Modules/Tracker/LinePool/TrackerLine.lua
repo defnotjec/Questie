@@ -211,13 +211,7 @@ _OnClickQuest = function(self, button)
         -- The SetTomTom bind (default ctrl-left) also toggles Focus on the quest, which engages
         -- supertracking (native arrow + WaypointUI) even without TomTom. Opt-in: trackerFocusOnSetTomTom.
         if Questie.db.profile.trackerFocusOnSetTomTom then
-            if TrackerUtils.GetFocusedQuestId() == self.Quest.Id then
-                TrackerUtils:UnFocus()
-                TrackerUtils.RefreshFocusIcons(true)
-            else
-                TrackerUtils:FocusQuest(self.Quest.Id)
-                TrackerUtils.RefreshFocusIcons(false)
-            end
+            TrackerUtils:ToggleFocusQuest(self.Quest.Id)
         end
     elseif TrackerUtils:IsBindTrue(Questie.db.profile.trackerbindUntrack, button) then
         if (IsModifiedClick("CHATLINK") and ChatEdit_GetActiveWindow()) then

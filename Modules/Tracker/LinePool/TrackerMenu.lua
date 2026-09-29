@@ -47,8 +47,7 @@ TrackerMenu.addFocusOption = function(menu, quest, objective)
             text = l10n('Unfocus'),
             func = function()
                 LibDropDown:CloseDropDownMenus()
-                TrackerUtils:UnFocus()
-                TrackerUtils.RefreshFocusIcons(true)
+                TrackerUtils:ClearFocus()
             end
         })
     else
@@ -56,8 +55,7 @@ TrackerMenu.addFocusOption = function(menu, quest, objective)
             text = l10n('Focus Objective'),
             func = function()
                 LibDropDown:CloseDropDownMenus()
-                TrackerUtils:FocusObjective(quest.Id, objective.Index)
-                TrackerUtils.RefreshFocusIcons(false)
+                TrackerUtils:ApplyFocusObjective(quest.Id, objective.Index)
             end
         })
     end
@@ -291,8 +289,7 @@ TrackerMenu.addFocusUnfocusOption = function(menu, quest)
             text = l10n('Unfocus'),
             func = function()
                 LibDropDown:CloseDropDownMenus()
-                TrackerUtils:UnFocus()
-                TrackerUtils.RefreshFocusIcons(true)
+                TrackerUtils:ClearFocus()
             end
         })
     else
@@ -300,8 +297,7 @@ TrackerMenu.addFocusUnfocusOption = function(menu, quest)
             text = l10n('Focus Quest'),
             func = function()
                 LibDropDown:CloseDropDownMenus()
-                TrackerUtils:FocusQuest(quest.Id)
-                TrackerUtils.RefreshFocusIcons(false)
+                TrackerUtils:ApplyFocusQuest(quest.Id)
             end
         })
     end

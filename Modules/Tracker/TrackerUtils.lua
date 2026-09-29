@@ -597,6 +597,32 @@ function TrackerUtils.RefreshFocusIcons(showAll)
     end)
 end
 
+-- Focus + lightweight redraw wrappers for user-facing focus actions. (Raw FocusQuest/FocusObjective/
+-- UnFocus are kept for internal use like the tracker rebuild re-applying persisted focus, which must
+-- NOT trigger an extra redraw -- so do not fold RefreshFocusIcons into those.)
+function TrackerUtils:ApplyFocusQuest(questId)
+    self:FocusQuest(questId)
+    TrackerUtils.RefreshFocusIcons(false)
+end
+
+function TrackerUtils:ApplyFocusObjective(questId, objectiveIndex)
+    self:FocusObjective(questId, objectiveIndex)
+    TrackerUtils.RefreshFocusIcons(false)
+end
+
+function TrackerUtils:ClearFocus()
+    self:UnFocus()
+    TrackerUtils.RefreshFocusIcons(true)
+end
+
+function TrackerUtils:ToggleFocusQuest(questId)
+    if TrackerUtils.GetFocusedQuestId() == questId then
+        self:ClearFocus()
+    else
+        self:ApplyFocusQuest(questId)
+    end
+end
+
 local _revFireCount = 0
 
 -- reverse: mirror the Blizzard supertracked quest into Questie's focus. Called from
@@ -619,8 +645,7 @@ function TrackerUtils.OnSuperTrackingChanged()
         -- focusToSuperTrack. Never an unrelated manual focus.
         if focused and (focused == _lastRevFocused or focused == _lastForwardSet) then
             Questie.Debug(Questie.DEBUG_DEVELOP, "[SuperTrackFocus] deselect -> unfocus", tostring(focused))
-            TrackerUtils:UnFocus()
-            TrackerUtils.RefreshFocusIcons(true)
+            TrackerUtils:ClearFocus()
         end
         _lastRevFocused = nil
         return
@@ -629,8 +654,7 @@ function TrackerUtils.OnSuperTrackingChanged()
     if focused == qid then return end                        -- already focused; avoid redundant redraw/loop
     if not QuestiePlayer.currentQuestlog[qid] then return end -- only quests in the log
     Questie.Debug(Questie.DEBUG_DEVELOP, "[SuperTrackFocus] select -> focus", tostring(qid))
-    TrackerUtils:FocusQuest(qid)
-    TrackerUtils.RefreshFocusIcons(false)
+    TrackerUtils:ApplyFocusQuest(qid)
     _lastRevFocused = qid
 end
 
