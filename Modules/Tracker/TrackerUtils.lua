@@ -597,20 +597,28 @@ function TrackerUtils.RefreshFocusIcons(showAll)
     end)
 end
 
-local _revPending = false
 local _revFireCount = 0
 
--- The actual reverse-focus work (runs once per debounced burst).
-local function _ApplyReverseFocus()
+-- reverse: mirror the Blizzard supertracked quest into Questie's focus. Called from
+-- SUPER_TRACKING_CHANGED. Runs IMMEDIATELY per event (not debounced): Blizzard fires this several
+-- times per click and a deselect can produce a transient supertrack=0 followed by a re-supertrack --
+-- coalescing would read only the final state and miss the deselect, leaving the quest focused. The
+-- redraw is the lightweight RefreshFocusIcons and the `focused == qid` guard makes repeat fires
+-- cheap, so per-event handling is inexpensive.
+function TrackerUtils.OnSuperTrackingChanged()
+    if not (_superTrackSupported and Questie.db.profile.superTrackToFocus) then return end
     local qid = C_SuperTrack.GetSuperTrackedQuestID()
     local focused = TrackerUtils.GetFocusedQuestId()
-    Questie.Debug(Questie.DEBUG_DEVELOP, "[SuperTrackFocus] apply: supertrack=", tostring(qid), "focused=", tostring(focused))
+    _revFireCount = _revFireCount + 1
+    Questie.Debug(Questie.DEBUG_DEVELOP, "[SuperTrackFocus] fire #", _revFireCount, "supertrack=", tostring(qid),
+        "focused=", tostring(focused), "lastRev=", tostring(_lastRevFocused), "lastFwd=", tostring(_lastForwardSet))
 
     if not qid or qid == 0 then
         -- Deselected (e.g. clicking the native POI again to clear it): drop the focus that was
         -- coupled to supertracking -- either one the reverse bridge focused, or one a focus set via
         -- focusToSuperTrack. Never an unrelated manual focus.
         if focused and (focused == _lastRevFocused or focused == _lastForwardSet) then
+            Questie.Debug(Questie.DEBUG_DEVELOP, "[SuperTrackFocus] deselect -> unfocus", tostring(focused))
             TrackerUtils:UnFocus()
             TrackerUtils.RefreshFocusIcons(true)
         end
@@ -620,25 +628,10 @@ local function _ApplyReverseFocus()
 
     if focused == qid then return end                        -- already focused; avoid redundant redraw/loop
     if not QuestiePlayer.currentQuestlog[qid] then return end -- only quests in the log
+    Questie.Debug(Questie.DEBUG_DEVELOP, "[SuperTrackFocus] select -> focus", tostring(qid))
     TrackerUtils:FocusQuest(qid)
     TrackerUtils.RefreshFocusIcons(false)
     _lastRevFocused = qid
-end
-
--- reverse: mirror the Blizzard supertracked quest into Questie's focus. Call from
--- SUPER_TRACKING_CHANGED. DEBOUNCED: Blizzard fires this event several times per POI click, and each
--- focus/unfocus runs ToggleNotes -> GetAllQuestIds -> a full QuestieTracker:Update (a heavy tracker
--- re-render). Coalescing the burst into one apply keeps a single POI click from re-rendering N times.
-function TrackerUtils.OnSuperTrackingChanged()
-    if not (_superTrackSupported and Questie.db.profile.superTrackToFocus) then return end
-    _revFireCount = _revFireCount + 1
-    Questie.Debug(Questie.DEBUG_DEVELOP, "[SuperTrackFocus] event fire #", _revFireCount, "pending=", tostring(_revPending))
-    if _revPending then return end
-    _revPending = true
-    C_Timer.After(0.05, function()
-        _revPending = false
-        _ApplyReverseFocus()
-    end)
 end
 
 ---@return table|nil position Returns Players current X/Y coordinates or nil if a Players postion can't be determined
