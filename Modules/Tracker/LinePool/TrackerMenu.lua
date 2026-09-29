@@ -48,7 +48,7 @@ TrackerMenu.addFocusOption = function(menu, quest, objective)
             func = function()
                 LibDropDown:CloseDropDownMenus()
                 TrackerUtils:UnFocus()
-                QuestieQuest:ToggleNotes(true)
+                TrackerUtils.RefreshFocusIcons(true)
             end
         })
     else
@@ -57,7 +57,7 @@ TrackerMenu.addFocusOption = function(menu, quest, objective)
             func = function()
                 LibDropDown:CloseDropDownMenus()
                 TrackerUtils:FocusObjective(quest.Id, objective.Index)
-                QuestieQuest:ToggleNotes(false)
+                TrackerUtils.RefreshFocusIcons(false)
             end
         })
     end
@@ -292,7 +292,7 @@ TrackerMenu.addFocusUnfocusOption = function(menu, quest)
             func = function()
                 LibDropDown:CloseDropDownMenus()
                 TrackerUtils:UnFocus()
-                QuestieQuest:ToggleNotes(true)
+                TrackerUtils.RefreshFocusIcons(true)
             end
         })
     else
@@ -301,7 +301,7 @@ TrackerMenu.addFocusUnfocusOption = function(menu, quest)
             func = function()
                 LibDropDown:CloseDropDownMenus()
                 TrackerUtils:FocusQuest(quest.Id)
-                QuestieQuest:ToggleNotes(false)
+                TrackerUtils.RefreshFocusIcons(false)
             end
         })
     end
