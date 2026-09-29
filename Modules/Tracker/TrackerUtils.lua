@@ -448,7 +448,13 @@ local _lastRevFocused -- questId the reverse bridge last focused, so deselect on
 
 -- Opt-in low-spam logger (toggle /qfsdbg). Defined here so the focus functions below can use it too.
 local function _fsdbg(msg)
-    if _G.QuestieFSDebug then print("|cff33ccff[QFS]|r " .. msg) end
+    if not _G.QuestieFSDebug then return end
+    print("|cff33ccff[QFS]|r " .. msg)
+    -- Also accumulate into the QuestieFSLog SavedVariable so it flushes to disk on /reload.
+    if type(_G.QuestieFSLog) == "table" then
+        _G.QuestieFSLog[#_G.QuestieFSLog + 1] = msg
+        if #_G.QuestieFSLog > 3000 then table.remove(_G.QuestieFSLog, 1) end
+    end
 end
 
 -- forward: engage native supertracking for questId (idempotent)
@@ -672,7 +678,12 @@ end
 SLASH_QUESTIEFOCUSDEBUG1 = "/qfsdbg"
 SlashCmdList["QUESTIEFOCUSDEBUG"] = function()
     _G.QuestieFSDebug = not _G.QuestieFSDebug
-    print("|cff33ccff[QFS]|r debug " .. (_G.QuestieFSDebug and "|cff40ff40ON|r" or "|cffff4040OFF|r"))
+    if _G.QuestieFSDebug then
+        _G.QuestieFSLog = {}   -- fresh capture; flushed to SavedVariables\Questie.lua on /reload
+        print("|cff33ccff[QFS]|r debug |cff40ff40ON|r — reproduce, then |cffffff00/reload|r to write QuestieFSLog to SavedVariables\\Questie.lua")
+    else
+        print("|cff33ccff[QFS]|r debug |cffff4040OFF|r (QuestieFSLog kept; /reload to flush)")
+    end
 end
 
 ---@return table|nil position Returns Players current X/Y coordinates or nil if a Players postion can't be determined
