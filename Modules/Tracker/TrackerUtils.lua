@@ -446,6 +446,11 @@ local _superTrackSupported = (C_SuperTrack and C_SuperTrack.SetSuperTrackedQuest
 local _lastForwardSet -- questId we last supertracked via focus, so unfocus only clears our own supertrack
 local _lastRevFocused -- questId the reverse bridge last focused, so deselect only unfocuses what we set
 
+-- Opt-in low-spam logger (toggle /qfsdbg). Defined here so the focus functions below can use it too.
+local function _fsdbg(msg)
+    if _G.QuestieFSDebug then print("|cff33ccff[QFS]|r " .. msg) end
+end
+
 -- forward: engage native supertracking for questId (idempotent)
 local function _SyncSuperTrack(questId)
     if not (_superTrackSupported and Questie.db.profile.focusToSuperTrack) then return end
@@ -568,6 +573,7 @@ function TrackerUtils:FocusQuest(questId)
 
     Questie.db.char.TrackerFocus = questId
     _SyncSuperTrack(questId)
+    local _faded = _G.QuestieFSDebug and {} or nil
     for questLogQuestId in pairs(QuestiePlayer.currentQuestlog) do
         local quest = QuestieDB.GetQuest(questLogQuestId)
         if quest then
@@ -576,9 +582,11 @@ function TrackerUtils:FocusQuest(questId)
                 quest.FadeIcons = nil
             else
                 quest.FadeIcons = true
+                if _faded then _faded[#_faded + 1] = questLogQuestId end
             end
         end
     end
+    if _faded then _fsdbg(("FocusQuest %s -> bright; faded {%s}"):format(tostring(questId), table.concat(_faded, ","))) end
 end
 
 -- Redraw the map icons for a focus/unfocus change. Delegates to ToggleNotes because it runs
@@ -595,12 +603,6 @@ function TrackerUtils.RefreshFocusIcons(showAll)
 end
 
 local _revFireCount = 0
-
--- Opt-in, low-spam logger for the focus/supertrack bridge. Toggle with /qfsdbg (off by default),
--- so we don't need Questie's global DEBUG_DEVELOP firehose to diagnose this feature.
-local function _fsdbg(msg)
-    if _G.QuestieFSDebug then print("|cff33ccff[QFS]|r " .. msg) end
-end
 
 -- Return the supertracked questId ONLY if a quest is what's actually supertracked. When a map pin,
 -- user waypoint, or vignette is supertracked instead (e.g. clicking a HandyNotes pin),
