@@ -606,21 +606,11 @@ end
 -- TODO(perf): reinstate a lightweight focus redraw that skips the full QuestieTracker:Update
 -- re-render WITHOUT breaking which icons show/hide (see the tracker-focus re-render task).
 function TrackerUtils.RefreshFocusIcons(showAll)
+    -- Match the archived/standalone behavior exactly: delegate to ToggleNotes.
     local QuestieQuest = QuestieLoader:ImportModule("QuestieQuest")
-    local ThreadLib = QuestieLoader:ImportModule("ThreadLib")
-    if not (QuestieQuest and ThreadLib and ThreadLib.ThreadInstant) then return end
-    -- Mirror QuestieQuest:ToggleNotes, but WITHOUT toggling manual/townsfolk icons: a focus change
-    -- must not show/hide innkeeper/flightmaster ("hearthstone") icons -- ToggleNotes' ShowManualIcons/
-    -- HideManualIcons is what caused deselect to toggle those. GetAllQuestIds is still run so the
-    -- focused quest's icons (re)appear correctly (the earlier light-only path dropped it and broke that).
-    ThreadLib.ThreadInstant(function()
-        QuestieQuest:GetAllQuestIds()
-        if showAll then
-            QuestieQuest:ShowQuestIcons()
-        else
-            QuestieQuest:HideQuestIcons()
-        end
-    end)
+    if QuestieQuest and QuestieQuest.ToggleNotes then
+        QuestieQuest:ToggleNotes(showAll)
+    end
 end
 
 local _revFireCount = 0
