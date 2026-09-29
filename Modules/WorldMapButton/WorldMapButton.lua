@@ -59,13 +59,24 @@ function WorldMapButton.UpdatePOIButton()
     poiButton.icon:SetAlpha(on and 1 or 0.45)
 end
 
--- Apply the questPOI CVar from the setting and refresh the native pins immediately.
+-- Some questPOI/POI writes taint during combat, so defer the apply to combat end.
+local _poiCombatFrame = CreateFrame("Frame")
+_poiCombatFrame:SetScript("OnEvent", function(self)
+    self:UnregisterEvent("PLAYER_REGEN_ENABLED")
+    WorldMapButton.ApplyQuestPOI()
+end)
+
+-- Apply the questPOI CVar from the setting (questPOIEnabled is the source of truth) and refresh the
+-- native pins. Combat-safe: if we're in lockdown, defer the whole apply until combat ends.
 function WorldMapButton.ApplyQuestPOI()
-    if not InCombatLockdown() then
-        local desired = _QuestPOIEnabled() and "1" or "0"
-        if GetCVar("questPOI") ~= desired then
-            SetCVar("questPOI", desired)
-        end
+    if InCombatLockdown() then
+        _poiCombatFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+        WorldMapButton.UpdatePOIButton()
+        return
+    end
+    local desired = _QuestPOIEnabled() and "1" or "0"
+    if GetCVar("questPOI") ~= desired then
+        SetCVar("questPOI", desired)
     end
     if type(QuestMapFrame_UpdateAll) == "function" then pcall(QuestMapFrame_UpdateAll) end
     if type(QuestPOIUpdateIcons) == "function" then pcall(QuestPOIUpdateIcons) end
@@ -73,6 +84,25 @@ function WorldMapButton.ApplyQuestPOI()
         pcall(function() WorldMapFrame:RefreshAllDataProviders() end)
     end
     WorldMapButton.UpdatePOIButton()
+end
+
+-- questPOIEnabled is authoritative: if anything flips questPOI off mid-session (Questie's own
+-- icon-theme objective toggles, Blizzard, etc.), snap it back while enabled. When disabled we stay
+-- hands-off. Deferred re-assert (C_Timer.After 0) avoids recursing through our own SetCVar.
+local _poiAuthorityInstalled = false
+local _poiReassertPending = false
+local function _InstallQuestPOIAuthority()
+    if _poiAuthorityInstalled then return end
+    _poiAuthorityInstalled = true
+    hooksecurefunc("SetCVar", function(cvar)
+        if cvar ~= "questPOI" or _poiReassertPending then return end
+        if not _QuestPOIEnabled() or GetCVar("questPOI") == "1" then return end
+        _poiReassertPending = true
+        C_Timer.After(0, function()
+            _poiReassertPending = false
+            WorldMapButton.ApplyQuestPOI()
+        end)
+    end)
 end
 
 -- Left-click the "?" button: flip native quest POIs on/off.
@@ -148,6 +178,7 @@ function WorldMapButton.Initialize()
     _BuildPOIButton()
     Questie.WorldMap.POIButton = poiButton
     if type(KButtons.SetPoints) == "function" then KButtons.SetPoints() end
+    _InstallQuestPOIAuthority()
 end
 
 ---@param shouldShow boolean
