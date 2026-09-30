@@ -51,6 +51,7 @@ end
 
 -- FORWARD: mirror a Questie focus onto Blizzard super-tracking. Idempotent (compares the current
 -- super-tracked id first) so it can't bounce against the reverse handler.
+---@param questId number
 local function SyncSuperTrack(questId)
     if not (hasSuperTrack and questId and Questie.db.profile.focusToSuperTrack) then
         return
