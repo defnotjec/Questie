@@ -533,6 +533,26 @@ local trackerUILocales = {
         ["zhCN"] = "计时结束！",
         ["zhTW"] = "計時結束！",
     },
+    ---------------------------------------------------------
+    -- Blizzard Integration (Focus <-> super-tracking)
+    ["Focus engages supertracking"] = {
+        ["enUS"] = true,
+    },
+    ["When you Focus a quest in the tracker, also set it as Blizzard's supertracked quest (native waypoint arrow + WaypointUI flare), in addition to Questie dimming the other map icons."] = {
+        ["enUS"] = true,
+    },
+    ["Focus selected quests"] = {
+        ["enUS"] = true,
+    },
+    ["When the Blizzard supertracked quest changes (for example by clicking a native quest POI pin), automatically Focus that quest in Questie. Deselecting clears the focus this created."] = {
+        ["enUS"] = true,
+    },
+    ["Ctrl-click focus (shares TomTom bind)"] = {
+        ["enUS"] = true,
+    },
+    ["Using the Set TomTom Target click (default Ctrl-Left Click) on a tracked quest also Focuses it (and supertracks it), so it works even without TomTom installed."] = {
+        ["enUS"] = true,
+    },
 }
 
 for k, v in pairs(trackerUILocales) do
